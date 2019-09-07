@@ -32,15 +32,19 @@ This question will not be graded.
 ############################################################
 
 def extract_and_apply(l, p, f):
-    return [f(x) for x in p(l)]
+    return [f(l) for l in p(l)]
 
 
 def concatenate(seqs):
-    pass
+    return [x for y in seqs for x in y]
 
 
 def transpose(matrix):
-    pass
+    result = [[] for i in range(len(matrix[0]))]
+    for i in range(len(matrix)):
+        for j in range(len(matrix[0])):
+            result[j].append(matrix[i][j])
+    return result
 
 
 ############################################################
@@ -48,15 +52,15 @@ def transpose(matrix):
 ############################################################
 
 def copy(seq):
-    pass
+    return seq[:]
 
 
 def all_but_last(seq):
-    pass
+    return seq[:-1]
 
 
 def every_other(seq):
-    pass
+    return seq[::2]
 
 
 ############################################################
@@ -64,15 +68,20 @@ def every_other(seq):
 ############################################################
 
 def prefixes(seq):
-    pass
+    for i in range(len(seq) + 1):
+        yield seq[:i]
 
 
 def suffixes(seq):
-    pass
+    for i in range(len(seq) + 1):
+        yield seq[i:]
 
 
 def slices(seq):
-    pass
+    for i in range(len(seq)):
+        for j in range(1, len(seq) + 1):
+            if i < j:
+                yield seq[i:j]
 
 
 ############################################################
@@ -80,19 +89,39 @@ def slices(seq):
 ############################################################
 
 def normalize(text):
-    pass
+    return " ".join(text.lower().split())
 
 
 def no_vowels(text):
-    pass
+    vowels = "aeiouAEIOU"
+    for i in vowels:
+        text = text.replace(i, "")
+    return text
 
 
 def digits_to_words(text):
-    pass
+    result = ""
+    num_dict = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four",
+                "5": "five", "6": "six", "7": "seven", "8": "eight",
+                "9": "nine"}
+
+    for letter in text:
+        if letter.isdigit():
+            result += num_dict.get(letter) + " "
+
+    return result.strip()
 
 
 def to_mixed_case(name):
-    pass
+    text = name.replace("_", " ").title().split()
+    if len(text) > 0:
+        text = text[0].lower() + "".join(text[1:])
+        return text
+    # text = text.lower()
+
+    return "".join(text)
+
+
 
 
 ############################################################
