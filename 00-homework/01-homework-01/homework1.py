@@ -31,8 +31,9 @@ This question will not be graded.
 # Section 2: Working with Lists
 ############################################################
 
+
 def extract_and_apply(l, p, f):
-    return [f(l) for l in p(l)]
+    return [f(x) for x in l if p(x)]
 
 
 def concatenate(seqs):
@@ -51,6 +52,7 @@ def transpose(matrix):
 # Section 3: Sequence Slicing
 ############################################################
 
+
 def copy(seq):
     return seq[:]
 
@@ -66,6 +68,7 @@ def every_other(seq):
 ############################################################
 # Section 4: Combinatorial Algorithms
 ############################################################
+
 
 def prefixes(seq):
     for i in range(len(seq) + 1):
@@ -88,6 +91,7 @@ def slices(seq):
 # Section 5: Text Processing
 ############################################################
 
+
 def normalize(text):
     return " ".join(text.lower().split())
 
@@ -101,9 +105,18 @@ def no_vowels(text):
 
 def digits_to_words(text):
     result = ""
-    num_dict = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four",
-                "5": "five", "6": "six", "7": "seven", "8": "eight",
-                "9": "nine"}
+    num_dict = {
+        "0": "zero",
+        "1": "one",
+        "2": "two",
+        "3": "three",
+        "4": "four",
+        "5": "five",
+        "6": "six",
+        "7": "seven",
+        "8": "eight",
+        "9": "nine",
+    }
 
     for letter in text:
         if letter.isdigit():
@@ -122,34 +135,41 @@ def to_mixed_case(name):
     return "".join(text)
 
 
-
-
 ############################################################
 # Section 6: Polynomials
 ############################################################
 
-class Polynomial(object):
 
+class Polynomial(object):
     def __init__(self, polynomial):
-        pass
+        self.polynomial = tuple(polynomial)
 
     def get_polynomial(self):
-        pass
+        return self.polynomial
 
     def __neg__(self):
-        pass
+        return Polynomial(tuple([(-x, y) for x, y in self.polynomial]))
 
     def __add__(self, other):
-        pass
+        return Polynomial(self.get_polynomial() + other.get_polynomial())
 
     def __sub__(self, other):
-        pass
+        negated_other = -other
+        return Polynomial(self.get_polynomial() + negated_other.get_polynomial())
 
     def __mul__(self, other):
-        pass
+        return Polynomial(
+            tuple(
+                [
+                    (x[0] * y[0], x[1] + y[1])
+                    for x in self.get_polynomial()
+                    for y in other.get_polynomial()
+                ]
+            )
+        )
 
     def __call__(self, x):
-        pass
+        return sum([y[0] * x ** y[1] for y in self.get_polynomial()])
 
     def simplify(self):
         pass
@@ -163,22 +183,14 @@ class Polynomial(object):
 ############################################################
 
 feedback_question_1 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
-This question will not be graded.
+9 hours
 """
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
-This question will not be graded.
+The syntax was the most challenging part of the assignment. Familiarity with
+built-in functions was the biggest stumbling block.
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
-This question will not be graded.
+More problems regarding matrix multiplication would be more useful.
 """
