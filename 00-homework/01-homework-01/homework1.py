@@ -9,21 +9,22 @@ student_name = "Jerrison Li"
 ############################################################
 
 python_concepts_question_1 = """
-Strongly typed means that 
+Strongly typed means that the type of the value doesn't change without it
+being casted. E.g., a number can be converted to string if you enclose it with
+the string() function.
+
+Dynamically typed means that variables assume a type when the program is run.
+You don't have to explicitly declare a variable's type. E.g., by saying a = 5,
+the variable "a" dynamically gets assigned an int type.
 """
 
 python_concepts_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
-This question will not be graded.
+Dictionary keys cannot be lists.
 """
 
 python_concepts_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
-This question will not be graded.
+The second is better because it is using a built-in function that was compiled
+for optimization.
 """
 
 
@@ -97,7 +98,7 @@ def normalize(text):
 
 
 def no_vowels(text):
-    vowels = "aeiouAEIOU"
+    vowels = "aAeEiIoOuU"
     for i in vowels:
         text = text.replace(i, "")
     return text
