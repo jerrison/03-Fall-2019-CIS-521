@@ -126,13 +126,16 @@ def digits_to_words(text):
 
 
 def to_mixed_case(name):
-    text = name.replace("_", " ").title().split()
-    if len(text) > 0:
-        text = text[0].lower() + "".join(text[1:])
+    text = name.replace("_", " ").split()
+    if len(text) > 1:
+        text = text[0].lower() + "".join(x.capitalize() for x in text[1:])
         return text
-    # text = text.lower()
+    elif len(text) == 1:
+        text = text.lower()
+    else:
+        text = ""
 
-    return "".join(text)
+    return text
 
 
 ############################################################
@@ -172,10 +175,64 @@ class Polynomial(object):
         return sum([y[0] * x ** y[1] for y in self.get_polynomial()])
 
     def simplify(self):
-        pass
+        unique_powers = list(set([y for x, y in self.get_polynomial()]))
+        coefficient_dict = dict.fromkeys(unique_powers, 0)
+        for coefficient, power in self.get_polynomial():
+            coefficient_dict[power] += coefficient
+
+        coefficient_dict = {v: k for k, v in coefficient_dict.items() if v != 0}
+
+        if not bool(coefficient_dict):
+            self.polynomial = ((0, 0),)
+            return
+
+        self.polynomial = tuple(
+            sorted(
+                [(k, v) for k, v in coefficient_dict.items()],
+                key=lambda x: x[1],
+                reverse=True,
+            )
+        )
 
     def __str__(self):
-        pass
+        if len(self.get_polynomial()) == 0:
+            return ""
+
+        result = ""
+        for coefficient, power in self.get_polynomial():
+            # sign part
+            if coefficient < 0:
+                result += "-"
+            else:
+                result += "+"
+
+            result += " "
+
+            # coefficient part
+            if abs(coefficient) == 1:
+                if power == 0:
+                    result += str(abs(coefficient))
+                else:
+                    pass
+            else:
+                result += str(abs(coefficient))
+
+            # power part
+            if power == 0:
+                pass
+            elif power == 1:
+                result += "x"
+            else:
+                result += "x^" + str(power)
+
+            result += " "
+
+        result = (result[0] + result[2:]).strip()
+
+        if result[0] == "+":
+            result = result[1:]
+
+        return result
 
 
 ############################################################
@@ -183,7 +240,7 @@ class Polynomial(object):
 ############################################################
 
 feedback_question_1 = """
-9 hours
+11 hours
 """
 
 feedback_question_2 = """
