@@ -28,11 +28,47 @@ def num_placements_one_per_row(n):
 
 
 def n_queens_valid(board):
-    pass
+    """Checks if a particular placement of a number of queens is valid. First
+    checks if there are any queens in the same column, then checks that no
+    queens are in the same diagonal.
+    
+    Return True if valid, False otherwise"""
+
+    # Check that no columns are repeated
+    if (len(board) == 0) or (len(board) == 1):
+        return True
+
+    if len(board) > len(set(board)):
+        return False
+
+    for i in range(len(board)):
+        # check rows below
+        for j in range(1, len(board) - i):
+            if board[i] + j == board[i + j]:
+                return False
+        # check rows above
+        for j in range(1, len(board) - i):
+            if board[i] - j == board[i + j]:
+                return False
+
+    return True
 
 
 def n_queens_solutions(n):
-    pass
+    for i in range(len(n)):
+        
+
+
+
+def n_queens_helper(n, board):
+    """Helper function
+    Why does the homework specify that I need an n for it?
+    I think it's because I supply a whole board but then use n so that the
+    function knows what portion of the board to evaluate."""
+
+    if n_queens_valid(board) == True:
+        return board
+
 
 
 ############################################################
