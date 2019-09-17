@@ -56,8 +56,7 @@ def n_queens_valid(board):
 
 def n_queens_solutions(n):
     for i in range(len(n)):
-        
-
+        pass
 
 
 def n_queens_helper(n, board):
@@ -68,7 +67,6 @@ def n_queens_helper(n, board):
 
     if n_queens_valid(board) == True:
         return board
-
 
 
 ############################################################
