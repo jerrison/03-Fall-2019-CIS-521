@@ -3,6 +3,7 @@ import tkinter
 
 import homework2
 
+
 class Light(tkinter.Canvas):
 
     BACKGROUND_ON = "white"
@@ -12,9 +13,15 @@ class Light(tkinter.Canvas):
     BORDER_OFF = "black"
 
     def __init__(self, master, size=60):
-        tkinter.Canvas.__init__(self, master, height=size, width=size,
-            background=Light.BACKGROUND_OFF, highlightthickness=2,
-            highlightbackground=Light.BORDER_OFF)
+        tkinter.Canvas.__init__(
+            self,
+            master,
+            height=size,
+            width=size,
+            background=Light.BACKGROUND_OFF,
+            highlightthickness=2,
+            highlightbackground=Light.BORDER_OFF,
+        )
 
     def set_state(self, state):
         color = Light.BACKGROUND_ON if state else Light.BACKGROUND_OFF
@@ -24,8 +31,8 @@ class Light(tkinter.Canvas):
         color = Light.BORDER_ON if selected else Light.BORDER_OFF
         self.configure(highlightbackground=color)
 
-class Board(tkinter.Frame):
 
+class Board(tkinter.Frame):
     def __init__(self, master, puzzle, rows, cols):
 
         tkinter.Frame.__init__(self, master)
@@ -40,8 +47,9 @@ class Board(tkinter.Frame):
             for col in range(self.cols):
                 light = Light(self)
                 light.grid(row=row, column=col, padx=1, pady=1)
-                light.bind("<Button-1>",
-                    lambda event, row=row, col=col: self.click(row, col))
+                light.bind(
+                    "<Button-1>", lambda event, row=row, col=col: self.click(row, col)
+                )
                 row_lights.append(light)
             self.lights.append(row_lights)
 
@@ -58,20 +66,24 @@ class Board(tkinter.Frame):
     def animate_moves(self, moves, delay=500):
         if moves:
             row, col = moves[0]
+
             def stage_1():
                 self.lights[row][col].set_selected(True)
                 self.after(delay, stage_2)
+
             def stage_2():
                 self.lights[row][col].set_selected(False)
                 self.puzzle.perform_move(row, col)
                 self.update_lights()
                 self.after(delay, stage_3)
+
             def stage_3():
                 self.animate_moves(moves[1:], delay=delay)
+
             stage_1()
 
-class LightsOutGUI(tkinter.Frame):
 
+class LightsOutGUI(tkinter.Frame):
     def __init__(self, master, rows, cols):
 
         tkinter.Frame.__init__(self, master)
@@ -83,9 +95,11 @@ class LightsOutGUI(tkinter.Frame):
 
         menu = tkinter.Frame(self)
         tkinter.Button(menu, text="Scramble", command=self.scramble_click).pack(
-            fill=tkinter.X, padx=1, pady=1)
+            fill=tkinter.X, padx=1, pady=1
+        )
         tkinter.Button(menu, text="Solve", command=self.solve_click).pack(
-            fill=tkinter.X, padx=1, pady=1)
+            fill=tkinter.X, padx=1, pady=1
+        )
         menu.pack(side=tkinter.RIGHT)
 
     def scramble_click(self):
@@ -94,6 +108,7 @@ class LightsOutGUI(tkinter.Frame):
 
     def solve_click(self):
         self.board.animate_moves(self.puzzle.find_solution())
+
 
 if __name__ == "__main__":
     root = tkinter.Tk()

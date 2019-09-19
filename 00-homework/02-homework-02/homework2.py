@@ -10,6 +10,10 @@ student_name = "Jerrison Li"
 
 # Include your imports here, if any are used.
 import math
+import numpy as np
+import copy
+import random
+
 
 ############################################################
 # Section 1: N-Queens
@@ -55,18 +59,22 @@ def n_queens_valid(board):
 
 
 def n_queens_solutions(n):
-    for i in range(len(n)):
-        pass
+    """Yield all valid placements of n queens on an n x n board"""
 
+    border = [[]]  # initialize empty state
 
-def n_queens_helper(n, board):
-    """Helper function
-    Why does the homework specify that I need an n for it?
-    I think it's because I supply a whole board but then use n so that the
-    function knows what portion of the board to evaluate."""
+    while 1:
+        if not border:
+            return
+        child = border.pop()
 
-    if n_queens_valid(board) == True:
-        return board
+        for i in range(n):
+            board = child + [i]
+            if n_queens_valid(board):
+                if len(board) == n:
+                    yield board
+                else:
+                    border.append(board)
 
 
 ############################################################
@@ -76,32 +84,63 @@ def n_queens_helper(n, board):
 
 class LightsOutPuzzle(object):
     def __init__(self, board):
-        pass
+        self.board = board
 
     def get_board(self):
-        pass
+        return self.board
 
     def perform_move(self, row, col):
-        pass
+        # itself
+        self.board[row][col] = not self.board[row][col]
+
+        # up
+        if row != 0:
+            self.board[row - 1][col] = not self.board[row - 1][col]
+
+        # down
+        if row != len(self.board) - 1:
+            self.board[row + 1][col] = not self.board[row + 1][col]
+
+        # left
+        if col != 0:
+            self.board[row][col - 1] = not self.board[row][col - 1]
+
+        # right
+        if col != len(self.board[0]) - 1:
+            self.board[row][col + 1] = not self.board[row][col + 1]
+        # pass
 
     def scramble(self):
-        pass
+        for i in range(0, len(self.board)):
+            for j in range(0, len(self.board[0])):
+                if random.random() < 0.5:
+                    self.perform_move(i, j)
 
     def is_solved(self):
-        pass
+        for i in range(len(self.get_board())):
+            for j in range(len(self.get_board()[0])):
+                if self.board[i][j]:
+                    return False
+
+        return True
 
     def copy(self):
-        pass
+        return copy.deepcopy(self)
 
     def successors(self):
-        pass
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                temp = self.copy()
+                temp.perform_move(i, j)
+                yield ((i, j), temp)
 
     def find_solution(self):
+        # return [(0, 0), (0, 2)]
         pass
 
 
 def create_puzzle(rows, cols):
-    pass
+    return LightsOutPuzzle(np.zeros((rows, cols), dtype=bool).tolist())
 
 
 ############################################################
@@ -122,19 +161,13 @@ def solve_distinct_disks(length, n):
 ############################################################
 
 feedback_question_1 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+20 hours
 """
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+Implementation of algorithms.
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+I would have changed the treatment of the problems.
 """
