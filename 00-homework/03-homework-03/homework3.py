@@ -12,6 +12,7 @@ student_name = "Jerrison Li"
 import itertools
 import copy
 import random
+import queue
 
 ############################################################
 # Section 1: Tile Puzzle
@@ -40,52 +41,64 @@ class TilePuzzle(object):
         self.rows = len(board)
         self.cols = len(board[0])
 
-    def get_board(self):
-        return self.board
-
-    def perform_move(self, direction):
-        # Find where 0 is first
-
+        # Find where 0
         for i in range(len(self.board)):
             try:
                 j = self.board[i].index(0)
             except ValueError:
                 pass
             else:
-                row = i
-                col = j
+                self.zero_row = i
+                self.zero_col = j
+
+    def get_board(self):
+        return self.board
+
+    def perform_move(self, direction):
 
         if direction.lower() == "up":
             # Up
-            if row == 0:
+            if self.zero_row == 0:
                 return False
             else:
-                self.board[row][col] = self.board[row - 1][col]
-                self.board[row - 1][col] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[
+                    self.zero_row - 1
+                ][self.zero_col]
+                self.board[self.zero_row - 1][self.zero_col] = 0
+                self.zero_row = self.zero_row - 1
                 return True
         elif direction.lower() == "down":
             # Down
-            if row == len(self.board) - 1:
+            if self.zero_row == len(self.board) - 1:
                 return False
             else:
-                self.board[row][col] = self.board[row + 1][col]
-                self.board[row + 1][col] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[
+                    self.zero_row + 1
+                ][self.zero_col]
+                self.board[self.zero_row + 1][self.zero_col] = 0
+                self.zero_row = self.zero_row + 1
                 return True
         elif direction.lower() == "left":
             # Left
-            if col == 0:
+            if self.zero_col == 0:
                 return False
             else:
-                self.board[row][col] = self.board[row][col - 1]
-                self.board[row][col - 1] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[self.zero_row][
+                    self.zero_col - 1
+                ]
+                self.board[self.zero_row][self.zero_col - 1] = 0
+                self.zero_col = self.zero_col - 1
                 return True
         elif direction.lower() == "right":
             # Left
-            if col == len(self.board[0]) - 1:
+            if self.zero_col == len(self.board[0]) - 1:
                 return False
             else:
-                self.board[row][col] = self.board[row][col + 1]
-                self.board[row][col + 1] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[self.zero_row][
+                    self.zero_col + 1
+                ]
+                self.board[self.zero_row][self.zero_col + 1] = 0
+                self.zero_col = self.zero_col + 1
                 return True
         else:
             return False
@@ -101,24 +114,115 @@ class TilePuzzle(object):
         return copy.deepcopy(self)
 
     def successors(self):
-        moves = itertools.cycle(["up", "down", "left", "right"])
-        while 1:
-            move = next(moves)
-            if self.perform_move(move):
-                yield (move, self.copy())
+        moves = ["up", "down", "left", "right"]
+        for move in moves:
+            new_p = self.copy()
+            if new_p.perform_move(move):
+                yield (move, new_p)
 
     # Required
     def find_solutions_iddfs(self):
         "Iterative deepening depth-first search (IDDFS)"
-        pass
+        limit = 1
+        solved = False
+        while not solved:
+            for solution in self.iddfs_helper(limit, []):
+                if solution:
+                    yield solution
+                    solved = True
+            limit += 1
 
     def iddfs_helper(self, limit, moves):
-        """Helper recurison function for find_solutions_iddfs"""
-        pass
+        """Helper recursion function for find_solutions_iddfs"""
+        if limit == 0:
+            if self.is_solved():
+                yield moves
+            else:
+                yield False
+        else:
+            for move, new_p in self.successors():
+                for solution in new_p.iddfs_helper(limit - 1, moves + [move]):
+                    yield solution
 
     # Required
     def find_solution_a_star(self):
-        pass
+        """Find optimal solution"""
+        frontier = queue.PriorityQueue()
+        frontier.put((self.manhattan_distance(), self))
+        g_n = {self: 0}
+
+        explored = set()
+
+        solution = []
+        current_distance = 0
+
+        while not frontier.empty():
+            current = frontier.get()
+
+            if current.is_solved():
+                return solution
+
+            explored.add(current.get_board())
+
+            for move, successor in current.get_successors():
+                # need distance from start position (maybe use manhattan distance but not from solved)?
+                new_distance = g_n[current] + 1 + successor.manhattan_distance()
+                if (
+                    successor.get_board() not in explored
+                    or successor.get_board() not in frontier
+                ):
+                    pass
+
+        # while True:
+        #     for move, successor in self.successors():
+        #         if successor.get_board() not in closed_list:
+        #             closed_list.append(successor.get_board())
+        #             print(
+        #                 move,
+        #                 successor.get_board(),
+        #                 successor.manhattan_distance(),
+        #                 self.get_board(),
+        #                 self.manhattan_distance(),
+        #                 solution,
+        #                 visited,
+        #             )
+        #             if successor.manhattan_distance() < self.manhattan_distance():
+        #                 solution.append(move)
+        #                 self.perform_move(move)
+        #                 current_distance = self.manhattan_distance()
+        #
+        # return solution
+
+    def manhattan_distance(self):
+        """Calculates Manhattan distance heuristic"""
+
+        manhattan_distance = 0
+
+        solved_board = create_tile_puzzle(self.rows, self.cols)
+
+        for row in range(self.rows):
+            for col in range(self.cols):
+
+                # Find value in each place
+                val = self.board[row][col]
+                if val == 0:
+                    continue
+                # print(row, col, val)
+
+                # Find where it should be
+                correct_location = [
+                    (index, row.index(val))
+                    for index, row in enumerate(solved_board.get_board())
+                    if val in row
+                ]
+
+                correct_row = correct_location[0][0]
+                correct_col = correct_location[0][1]
+
+                # print("desired row and column = ", (correct_row, correct_col))
+                manhattan_distance += abs(correct_row - row) + abs(correct_col - col)
+
+        return manhattan_distance
 
 
 ############################################################
@@ -159,6 +263,28 @@ Do not include these instructions in your response.
 """
 
 
-p = create_tile_puzzle(3, 3)
+# p = create_tile_puzzle(3, 3)
+# for move, new_p in p.successors():
+#     print(move, new_p.get_board())
+
+# p = create_tile_puzzle(3, 3)
+# p.perform_move("up")
+# print(p.manhattan_distance())
+
+# b = [[4, 1, 2], [0, 5, 3], [7, 8, 6]]
+# p = TilePuzzle(b)
+# p.find_solution_a_star()
+
+b = [[1, 2, 3], [4, 0, 5], [6, 7, 8]]
+p = TilePuzzle(b)
 for move, new_p in p.successors():
     print(move, new_p.get_board())
+
+# b = [[4, 1, 2], [0, 5, 3], [7, 8, 6]]
+# p = TilePuzzle(b)
+# p.perform_move("left")
+# print(p.manhattan_distance())
+#
+#
+# p = create_tile_puzzle(3, 3)
+# print(p.manhattan_distance())
