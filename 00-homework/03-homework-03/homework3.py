@@ -40,52 +40,64 @@ class TilePuzzle(object):
         self.rows = len(board)
         self.cols = len(board[0])
 
-    def get_board(self):
-        return self.board
-
-    def perform_move(self, direction):
-        # Find where 0 is first
-
+        # Find where 0
         for i in range(len(self.board)):
             try:
                 j = self.board[i].index(0)
             except ValueError:
                 pass
             else:
-                row = i
-                col = j
+                self.zero_row = i
+                self.zero_col = j
+
+    def get_board(self):
+        return self.board
+
+    def perform_move(self, direction):
 
         if direction.lower() == "up":
             # Up
-            if row == 0:
+            if self.zero_row == 0:
                 return False
             else:
-                self.board[row][col] = self.board[row - 1][col]
-                self.board[row - 1][col] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[
+                    self.zero_row - 1
+                ][self.zero_col]
+                self.board[self.zero_row - 1][self.zero_col] = 0
+                self.zero_row = self.zero_row - 1
                 return True
         elif direction.lower() == "down":
             # Down
-            if row == len(self.board) - 1:
+            if self.zero_row == len(self.board) - 1:
                 return False
             else:
-                self.board[row][col] = self.board[row + 1][col]
-                self.board[row + 1][col] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[
+                    self.zero_row + 1
+                ][self.zero_col]
+                self.board[self.zero_row + 1][self.zero_col] = 0
+                self.zero_row = self.zero_row + 1
                 return True
         elif direction.lower() == "left":
             # Left
-            if col == 0:
+            if self.zero_col == 0:
                 return False
             else:
-                self.board[row][col] = self.board[row][col - 1]
-                self.board[row][col - 1] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[self.zero_row][
+                    self.zero_col - 1
+                ]
+                self.board[self.zero_row][self.zero_col - 1] = 0
+                self.zero_col = self.zero_col - 1
                 return True
         elif direction.lower() == "right":
             # Left
-            if col == len(self.board[0]) - 1:
+            if self.zero_col == len(self.board[0]) - 1:
                 return False
             else:
-                self.board[row][col] = self.board[row][col + 1]
-                self.board[row][col + 1] = 0
+                self.board[self.zero_row][self.zero_col] = self.board[self.zero_row][
+                    self.zero_col + 1
+                ]
+                self.board[self.zero_row][self.zero_col + 1] = 0
+                self.zero_col = self.zero_col + 1
                 return True
         else:
             return False
@@ -101,20 +113,35 @@ class TilePuzzle(object):
         return copy.deepcopy(self)
 
     def successors(self):
-        moves = itertools.cycle(["up", "down", "left", "right"])
-        while 1:
-            move = next(moves)
-            if self.perform_move(move):
-                yield (move, self.copy())
+        moves = ["up", "down", "left", "right"]
+        for move in moves:
+            new_p = self.copy()
+            if new_p.perform_move(move):
+                yield (move, new_p)
 
     # Required
     def find_solutions_iddfs(self):
         "Iterative deepening depth-first search (IDDFS)"
-        pass
+        limit = 1
+        solved = False
+        while not solved:
+            for solution in self.iddfs_helper(limit, []):
+                if solution:
+                    yield solution
+                    solved = True
+            limit += 1
 
     def iddfs_helper(self, limit, moves):
-        """Helper recurison function for find_solutions_iddfs"""
-        pass
+        """Helper recursion function for find_solutions_iddfs"""
+        if limit == 0:
+            if self.is_solved():
+                yield moves
+            else:
+                yield False
+        else:
+            for move, new_p in self.successors():
+                for solution in new_p.iddfs_helper(limit - 1, moves + [move]):
+                    yield solution
 
     # Required
     def find_solution_a_star(self):
@@ -159,6 +186,6 @@ Do not include these instructions in your response.
 """
 
 
-p = create_tile_puzzle(3, 3)
-for move, new_p in p.successors():
-    print(move, new_p.get_board())
+# p = create_tile_puzzle(3, 3)
+# for move, new_p in p.successors():
+#     print(move, new_p.get_board())
