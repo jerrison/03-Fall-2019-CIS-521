@@ -18,7 +18,6 @@ student_name = "Jerrison Li"
 
 def sudoku_cells():
     pass
-#testing git upload
 
 
 def sudoku_arcs():
@@ -35,7 +34,7 @@ class Sudoku(object):
     ARCS = sudoku_arcs()
 
     def __init__(self, board):
-        pass
+        self.values = {}
 
     def get_values(self, cell):
         pass
