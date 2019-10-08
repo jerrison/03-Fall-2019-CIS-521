@@ -169,44 +169,20 @@ class Sudoku(object):
     def set_store(self):
         return {1: [0], 2: [0], 3: [0], 4: [0], 5: [0], 6: [0], 7: [0], 8: [0], 9: [0]}
 
-    def com_solve(self):
+    def infer_helper(self):
         explored1 = []
-        explored2 = []
         count = 0
         for i in range(9):
             for j in range(9):
                 cell1 = (i, j)
-                cell2 = (j, i)
                 value1 = self.board[cell1]
-                value2 = self.board[cell2]
                 if len(value1) == 1:
                     count += 1
                     if list(value1)[0] in explored1:
                         return (False, 0)
                     else:
                         explored1.append(list(value1)[0])
-                if len(value2) == 1:
-
-                    if list(value2)[0] in explored2:
-                        return (False, 0)
-                    else:
-                        explored2.append(list(value2)[0])
             explored1 = []
-            explored2 = []
-        explored3 = []
-        for i in range(3):
-            for j in range(3):
-                for ci in range(3):
-                    for cj in range(3):
-                        cell3 = (i * 3 + ci, j * 3 + cj)
-                        value3 = self.board[cell3]
-                        if len(value3) == 1:
-
-                            if list(value3)[0] in explored3:
-                                return (False, 0)
-                            else:
-                                explored3.append(list(value3)[0])
-                explored3 = []
         return (True, count)
 
     def update_cell(self, type):
@@ -289,26 +265,25 @@ class Sudoku(object):
         return changed
 
     def shuffle(self):
-        improve_finish = True
+        finished = False
         self.infer_ac3()
-        while improve_finish:
-            a = 0
-            if self.update_cell("block"):
-                self.infer_ac3()
-                a += 1
-            if self.update_cell("row"):
-                self.infer_ac3()
-                a += 1
+        while not finished:
+            changed = 0
             if self.update_cell("column"):
                 self.infer_ac3()
-                a += 1
-            if a == 0:
-                improve_finish = False
+                changed += 1
+            if self.update_cell("block"):
+                self.infer_ac3()
+                changed += 1
+            if self.update_cell("row"):
+                self.infer_ac3()
+                changed += 1
+            if changed == 0:
+                finished = True
 
-    def helper(self, que):
-
+    def infer(self, queue):
         self.shuffle()
-        s = self.com_solve()
+        s = self.infer_helper()
         if s == (True, 81):
             return self
 
@@ -335,23 +310,23 @@ class Sudoku(object):
 
                     self.board.update({cell: fi_set})
 
-                    que.append(future_board)
-                    result = self.helper(que)
+                    queue.append(future_board)
+                    result = self.infer(queue)
 
                     if result:
                         return True
 
                     while not result:
-                        self.board = que.pop()
-                        result = self.helper(que)
+                        self.board = queue.pop()
+                        result = self.infer(queue)
                         if result:
                             return True
 
     def infer_with_guessing(self):
         queue = []
 
-        self.helper(queue)
-        return 1
+        self.infer(queue)
+        return True
 
 
 ############################################################
@@ -380,35 +355,35 @@ class DominoesGame(object):
     def is_legal_move(self, row, col, vertical):
         if row < 0 or row >= self.rows or col < 0 or col >= self.columns:
             return False
-        if vertical:
-            if row + 1 >= self.rows:
-                return False
-            if self.board[row][col] or self.board[row + 1][col]:
-                return False
-            else:
-                return True
-        else:
+        if not vertical:
             if col + 1 >= self.columns:
                 return False
             if self.board[row][col] or self.board[row][col + 1]:
                 return False
             else:
                 return True
+        else:
+            if row + 1 >= self.rows:
+                return False
+            if self.board[row][col] or self.board[row + 1][col]:
+                return False
+            else:
+                return True
 
     def legal_moves(self, vertical):
-        for y in range(self.rows):
-            for x in range(self.columns):
-                if self.is_legal_move(y, x, vertical):
-                    yield (y, x)
+        for i in range(self.rows):
+            for j in range(self.columns):
+                if self.is_legal_move(i, j, vertical):
+                    yield (i, j)
 
     def perform_move(self, row, col, vertical):
         if self.is_legal_move(row, col, vertical):
-            if vertical:
-                self.board[row][col] = True
-                self.board[row + 1][col] = True
-            else:
+            if not vertical:
                 self.board[row][col] = True
                 self.board[row][col + 1] = True
+            else:
+                self.board[row][col] = True
+                self.board[row + 1][col] = True
 
     def game_over(self, vertical):
         if len(list(self.legal_moves(vertical))) > 0:
@@ -420,16 +395,15 @@ class DominoesGame(object):
         return copy.deepcopy(self)
 
     def successors(self, vertical):
-        for y, x in self.legal_moves(vertical):
+        for i, j in self.legal_moves(vertical):
             new_game = self.copy()
-            new_game.perform_move(y, x, vertical)
-            yield ((y, x), new_game)
+            new_game.perform_move(i, j, vertical)
+            yield ((i, j), new_game)
 
     def get_random_move(self, vertical):
-        y, x = random.choice(list(self.legal_moves(vertical)))
-        self.perform_move(y, x, vertical)
+        i, j = random.choice(list(self.legal_moves(vertical)))
+        self.perform_move(i, j, vertical)
 
-    # Required
     def get_best_move(self, vertical, limit):
 
         a = float("-inf")
@@ -440,38 +414,40 @@ class DominoesGame(object):
                 list(state.legal_moves(False))
             )
 
-        def alphabeta(state, alpha, beta, depth, v):
+        def alpha_beta_pruning(state, alpha, beta, depth, v):
             best_move = None
             if depth == 0 or state.game_over(v):
-                alphabeta.num_nodes += 1
-                return None, utility(state), alphabeta.num_nodes
+                alpha_beta_pruning.num_nodes += 1
+                return None, utility(state), alpha_beta_pruning.num_nodes
             if v:
                 for (y, x), new_game in state.successors(v):
                     old_alpha = alpha
                     # print (y, x, v)
                     alpha = max(
-                        alpha, alphabeta(new_game, alpha, beta, depth - 1, not v)[1]
+                        alpha,
+                        alpha_beta_pruning(new_game, alpha, beta, depth - 1, not v)[1],
                     )
                     if alpha != old_alpha:
                         best_move = (y, x)
                     if alpha >= beta:
                         break
-                return best_move, alpha, alphabeta.num_nodes
+                return best_move, alpha, alpha_beta_pruning.num_nodes
             else:
                 for (y, x), new_game in state.successors(v):
                     old_beta = beta
                     beta = min(
-                        beta, alphabeta(new_game, alpha, beta, depth - 1, not v)[1]
+                        beta,
+                        alpha_beta_pruning(new_game, alpha, beta, depth - 1, not v)[1],
                     )
                     if beta != old_beta:
                         best_move = (y, x)
                     if alpha >= beta:
                         break
-                return best_move, beta, alphabeta.num_nodes
+                return best_move, beta, alpha_beta_pruning.num_nodes
 
-        alphabeta.num_nodes = 0
+        alpha_beta_pruning.num_nodes = 0
 
-        best_next_move, value, number = alphabeta(self, a, b, limit, vertical)
+        best_next_move, value, number = alpha_beta_pruning(self, a, b, limit, vertical)
         if vertical:
             return best_next_move, value, number
         else:
