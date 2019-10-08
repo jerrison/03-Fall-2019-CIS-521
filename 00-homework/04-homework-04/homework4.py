@@ -24,7 +24,6 @@ def sudoku_cells():
 
 def sudoku_arcs():
     arcs = set()
-    # same 9 box
     for i in range(9):
         for j in range(9):
             for k in range(3):
@@ -33,7 +32,6 @@ def sudoku_arcs():
                     y = int(j / 3) * 3 + l
                     if i != x or j != y:
                         arcs.add(((i, j), (x, y)))
-    # row, col, and diagonal
     for i in range(9):
         for j in range(9):
             for k in range(9):
@@ -169,22 +167,6 @@ class Sudoku(object):
     def set_store(self):
         return {1: [0], 2: [0], 3: [0], 4: [0], 5: [0], 6: [0], 7: [0], 8: [0], 9: [0]}
 
-    def infer_helper(self):
-        explored1 = []
-        count = 0
-        for i in range(9):
-            for j in range(9):
-                cell1 = (i, j)
-                value1 = self.board[cell1]
-                if len(value1) == 1:
-                    count += 1
-                    if list(value1)[0] in explored1:
-                        return (False, 0)
-                    else:
-                        explored1.append(list(value1)[0])
-            explored1 = []
-        return (True, count)
-
     def update_cell(self, type):
         changed = False
         store = self.set_store()
@@ -281,6 +263,22 @@ class Sudoku(object):
             if changed == 0:
                 finished = True
 
+    def infer_helper(self):
+        explored = []
+        count = 0
+        for i in range(9):
+            for j in range(9):
+                cell1 = (i, j)
+                value1 = self.board[cell1]
+                if len(value1) == 1:
+                    count += 1
+                    if list(value1)[0] in explored:
+                        return (False, 0)
+                    else:
+                        explored.append(list(value1)[0])
+            explored = []
+        return (True, count)
+
     def infer(self, queue):
         self.shuffle()
         s = self.infer_helper()
@@ -352,6 +350,21 @@ class DominoesGame(object):
     def reset(self):
         self.board = [[False for i in range(self.columns)] for j in range(self.rows)]
 
+    def legal_moves(self, vertical):
+        for i in range(self.rows):
+            for j in range(self.columns):
+                if self.is_legal_move(i, j, vertical):
+                    yield (i, j)
+
+    def perform_move(self, row, col, vertical):
+        if self.is_legal_move(row, col, vertical):
+            if not vertical:
+                self.board[row][col] = True
+                self.board[row][col + 1] = True
+            else:
+                self.board[row][col] = True
+                self.board[row + 1][col] = True
+
     def is_legal_move(self, row, col, vertical):
         if row < 0 or row >= self.rows or col < 0 or col >= self.columns:
             return False
@@ -370,29 +383,14 @@ class DominoesGame(object):
             else:
                 return True
 
-    def legal_moves(self, vertical):
-        for i in range(self.rows):
-            for j in range(self.columns):
-                if self.is_legal_move(i, j, vertical):
-                    yield (i, j)
-
-    def perform_move(self, row, col, vertical):
-        if self.is_legal_move(row, col, vertical):
-            if not vertical:
-                self.board[row][col] = True
-                self.board[row][col + 1] = True
-            else:
-                self.board[row][col] = True
-                self.board[row + 1][col] = True
+    def copy(self):
+        return copy.deepcopy(self)
 
     def game_over(self, vertical):
         if len(list(self.legal_moves(vertical))) > 0:
             return False
         else:
             return True
-
-    def copy(self):
-        return copy.deepcopy(self)
 
     def successors(self, vertical):
         for i, j in self.legal_moves(vertical):
@@ -406,23 +404,17 @@ class DominoesGame(object):
 
     def get_best_move(self, vertical, limit):
 
-        a = float("-inf")
-        b = float("inf")
-
-        def utility(state):
-            return len(list(state.legal_moves(True))) - len(
-                list(state.legal_moves(False))
-            )
+        a = float(-999999999999999999999)
+        b = float(999999999999999999999)
 
         def alpha_beta_pruning(state, alpha, beta, depth, v):
             best_move = None
             if depth == 0 or state.game_over(v):
                 alpha_beta_pruning.num_nodes += 1
-                return None, utility(state), alpha_beta_pruning.num_nodes
+                return None, ult(state), alpha_beta_pruning.num_nodes
             if v:
                 for (y, x), new_game in state.successors(v):
                     old_alpha = alpha
-                    # print (y, x, v)
                     alpha = max(
                         alpha,
                         alpha_beta_pruning(new_game, alpha, beta, depth - 1, not v)[1],
@@ -444,6 +436,11 @@ class DominoesGame(object):
                     if alpha >= beta:
                         break
                 return best_move, beta, alpha_beta_pruning.num_nodes
+
+        def ult(state):
+            return len(list(state.legal_moves(True))) - len(
+                list(state.legal_moves(False))
+            )
 
         alpha_beta_pruning.num_nodes = 0
 
