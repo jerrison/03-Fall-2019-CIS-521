@@ -10,9 +10,7 @@ student_name = "Jerrison Li"
 
 # Include your imports here, if any are used.
 import pathlib
-import os
 import copy
-import collections
 import random
 
 ############################################################
@@ -171,87 +169,6 @@ class Sudoku(object):
     def set_store(self):
         return {1: [0], 2: [0], 3: [0], 4: [0], 5: [0], 6: [0], 7: [0], 8: [0], 9: [0]}
 
-    def update_cell_0(self):
-        changed = False
-        store = self.set_store()
-        for i in range(3):
-            for j in range(3):
-
-                for ci in range(3):
-                    for cj in range(3):
-                        cell = (i * 3 + ci, j * 3 + cj)
-                        if len(self.board[cell]) == 1:
-                            continue
-                        else:
-                            key = self.board[cell]
-                            for every_key in key:
-                                store[every_key][0] += 1
-                                store[every_key].append(cell)
-                for _key in store.keys():
-                    if store[_key][0] == 1:
-                        changed = True
-                        rst = set()
-                        rst.add(_key)
-                        c_cell = store[_key][1]
-                        self.board.update({c_cell: rst})
-                        if len(rst) == 1:
-                            self.confirm += 1
-                        break
-                store = self.set_store()
-        return changed
-
-    def update_cell_1(self):
-        changed = False
-        store_r = self.set_store()
-        for i in range(9):
-            for j in range(9):
-                cell_r = (i, j)
-                if len(self.board[cell_r]) == 1:
-                    continue
-                else:
-                    key_r = self.board[cell_r]
-                    for every_key_r in key_r:
-                        store_r[every_key_r][0] += 1
-                        store_r[every_key_r].append(cell_r)
-            for _key_r in store_r.keys():
-                if store_r[_key_r][0] == 1:
-                    changed = True
-                    rst_r = set()
-                    rst_r.add(_key_r)
-                    c_cell_r = store_r[_key_r][1]
-                    self.board.update({c_cell_r: rst_r})
-                    if len(rst_r) == 1:
-                        self.confirm += 1
-                    break
-            store_r = self.set_store()
-        return changed
-
-    def update_cell_2(self):
-        changed = False
-        store_c = self.set_store()
-        for i in range(9):
-            for j in range(9):
-                cell_c = (j, i)
-                if len(self.board[cell_c]) == 1:
-                    continue
-                else:
-                    key_c = self.board[cell_c]
-                    for every_key_c in key_c:
-                        store_c[every_key_c][0] += 1
-                        store_c[every_key_c].append(cell_c)
-            for _key_c in store_c.keys():
-                if store_c[_key_c][0] == 1:
-                    changed = True
-                    rst_c = set()
-                    rst_c.add(_key_c)
-                    c_cell_c = store_c[_key_c][1]
-                    self.board.update({c_cell_c: rst_c})
-                    if len(rst_c) == 1:
-                        self.confirm += 1
-                    break
-            store_c = self.set_store()
-        return changed
-
     def com_solve(self):
         explored1 = []
         explored2 = []
@@ -292,18 +209,97 @@ class Sudoku(object):
                 explored3 = []
         return (True, count)
 
-    def pre_deal(self):
+    def update_cell(self, type):
+        changed = False
+        store = self.set_store()
+
+        if type == "block":
+            for i in range(3):
+                for j in range(3):
+
+                    for ci in range(3):
+                        for cj in range(3):
+                            cell = (i * 3 + ci, j * 3 + cj)
+                            if len(self.board[cell]) == 1:
+                                continue
+                            else:
+                                key = self.board[cell]
+                                for every_key in key:
+                                    store[every_key][0] += 1
+                                    store[every_key].append(cell)
+                    for _key in store.keys():
+                        if store[_key][0] == 1:
+                            changed = True
+                            rst = set()
+                            rst.add(_key)
+                            c_cell = store[_key][1]
+                            self.board.update({c_cell: rst})
+                            if len(rst) == 1:
+                                self.confirm += 1
+                            break
+                    store = self.set_store()
+            return changed
+
+        if type == "row":
+            for i in range(9):
+                for j in range(9):
+                    cell = (i, j)
+                    if len(self.board[cell]) == 1:
+                        continue
+                    else:
+                        key = self.board[cell]
+                        for every_key in key:
+                            store[every_key][0] += 1
+                            store[every_key].append(cell)
+                for _key in store.keys():
+                    if store[_key][0] == 1:
+                        changed = True
+                        rst_r = set()
+                        rst_r.add(_key)
+                        c_cell = store[_key][1]
+                        self.board.update({c_cell: rst_r})
+                        if len(rst_r) == 1:
+                            self.confirm += 1
+                        break
+                store = self.set_store()
+        return changed
+
+        if type == "column":
+            for i in range(9):
+                for j in range(9):
+                    cell = (j, i)
+                    if len(self.board[cell]) == 1:
+                        continue
+                    else:
+                        key = self.board[cell]
+                        for every_key in key:
+                            store[every_key][0] += 1
+                            store[every_key].append(cell)
+                for _key in store.keys():
+                    if store[_key][0] == 1:
+                        changed = True
+                        rst = set()
+                        rst.add(_key)
+                        cell = store[_key][1]
+                        self.board.update({cell: rst})
+                        if len(rst) == 1:
+                            self.confirm += 1
+                        break
+                store = self.set_store()
+        return changed
+
+    def shuffle(self):
         improve_finish = True
         self.infer_ac3()
         while improve_finish:
             a = 0
-            if self.update_cell_0():
+            if self.update_cell("block"):
                 self.infer_ac3()
                 a += 1
-            if self.update_cell_1():
+            if self.update_cell("row"):
                 self.infer_ac3()
                 a += 1
-            if self.update_cell_2():
+            if self.update_cell("column"):
                 self.infer_ac3()
                 a += 1
             if a == 0:
@@ -311,12 +307,12 @@ class Sudoku(object):
 
     def helper(self, que):
 
-        self.pre_deal()
+        self.shuffle()
         s = self.com_solve()
         if s == (True, 81):
             return self
 
-        if not self.com_solve()[0]:
+        if not s[0]:
             return False
 
         for i in range(9):
@@ -352,9 +348,9 @@ class Sudoku(object):
                             return True
 
     def infer_with_guessing(self):
-        que = []
+        queue = []
 
-        self.helper(que)
+        self.helper(queue)
         return 1
 
 
