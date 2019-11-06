@@ -58,17 +58,6 @@ class QLearningAgent(ReinforcementAgent):
         stateQVals = self.qVals.setdefault(state, util.Counter())
         return stateQVals[action]
 
-    def getPolicyAndValue(self, state):
-        bestAct, bestVal = None, None
-        actions = self.getLegalActions(state)
-        if len(actions) == 0:
-            return (None, 0.0)
-        for act in actions:
-            val = self.getQValue(state, act)
-            if bestVal == None or val > bestVal:
-                bestAct, bestVal = act, val
-        return bestAct, bestVal
-
     def computeValueFromQValues(self, state):
         """
           Returns max_action Q(state,action)
@@ -77,7 +66,7 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        return self.getPolicyAndValue(state)[1]
+        return self.policy_and_value_helper(state)[1]
 
     def computeActionFromQValues(self, state):
         """
@@ -86,7 +75,18 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        return self.getPolicyAndValue(state)[0]
+        return self.policy_and_value_helper(state)[0]
+
+    def policy_and_value_helper(self, state):
+        best_action, best_value = None, None
+        actions = self.getLegalActions(state)
+        if len(actions) == 0:
+            return (None, 0.0)
+        for act in actions:
+            val = self.getQValue(state, act)
+            if best_value == None or val > best_value:
+                best_action, best_value = act, val
+        return best_action, best_value
 
     def getAction(self, state):
         """
@@ -189,9 +189,9 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        feats = self.featExtractor.getFeatures(state,action)
+        feats = self.featExtractor.getFeatures(state, action)
         qVal = 0.0
-        for f,v in feats.items():
+        for f, v in feats.items():
             qVal += self.weights[f] * v
         return qVal
 
@@ -200,11 +200,11 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        feats = self.featExtractor.getFeatures(state,action)
-        oldQVal = self.getQValue(state,action)
+        feats = self.featExtractor.getFeatures(state, action)
+        oldQVal = self.getQValue(state, action)
         newQVal = reward + self.discount * self.computeValueFromQValues(nextState)
-        update = self.alpha * (newQVal-oldQVal)
-        for f,v in feats.items():
+        update = self.alpha * (newQVal - oldQVal)
+        for f, v in feats.items():
             self.weights[f] += update * v
 
     def final(self, state):
