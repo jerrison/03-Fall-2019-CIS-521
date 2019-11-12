@@ -11,7 +11,7 @@ student_name = "Jerrison Li"
 import homework7_data as data
 
 # Include your imports here, if any are used.
-
+import time
 
 ############################################################
 # Section 1: Perceptrons
@@ -20,62 +20,57 @@ import homework7_data as data
 
 class BinaryPerceptron(object):
     def __init__(self, examples, iterations):
-        self.w = {}
+        self.labelDict = {}
         for i in range(iterations):
             for d, sign in examples:
                 prediction = 0.0
                 for key in d:
-                    prediction += d[key] * self.w.get(key, 0)
+                    prediction += d[key] * self.labelDict.get(key, 0)
                 if (sign and prediction <= 0) or (not sign and prediction > 0):
                     for key in d:
                         if sign > 0:
-                            self.w[key] = self.w.get(key, 0) + d[key]
+                            self.labelDict[key] = self.labelDict.get(key, 0) + d[key]
                         else:
-                            self.w[key] = self.w.get(key, 0) - d[key]
+                            self.labelDict[key] = self.labelDict.get(key, 0) - d[key]
 
     def predict(self, x):
         res = 0
         for key in x:
-            res += self.w.get(key, 0) * x[key]
+            res += self.labelDict.get(key, 0) * x[key]
         return res > 0
 
 
 class MulticlassPerceptron(object):
     def __init__(self, examples, iterations):
         self.d = {label: {} for dict, label in examples}
-        # pick a first label
         first = examples[0][1]
         for i in range(iterations):
             for dict, l in examples:
-                # compute max predicted label
-                best_l, best_val = first, None
+                bestLabel, bestVal = first, None
                 for l_key in self.d:
                     prediction = 0
                     d_l = self.d[l_key]
                     for key in dict:
                         prediction += d_l.get(key, 0) * dict[key]
-                    if best_val == None or prediction > best_val:
-                        best_val, best_l = prediction, l_key
-                # update weight vector
-                if best_l != l:
+                    if bestVal == None or prediction > bestVal:
+                        bestVal, bestLabel = prediction, l_key
+                if bestLabel != l:
                     for key in dict:
                         x = dict[key]
-                        # Increase the score for the correct class
                         self.d[l][key] = self.d[l].get(key, 0) + x
-                        # Decrease the score for the predicted class
-                        self.d[best_l][key] = self.d[best_l].get(key, 0) - x
+                        self.d[bestLabel][key] = self.d[bestLabel].get(key, 0) - x
 
     def predict(self, x):
-        best_l = None
-        best_val = 0
-        for l_key in self.d:  # for each label
+        bestLabel = None
+        bestVal = 0
+        for l_key in self.d:
             prediction = 0
-            for data in x:  # for each value in dictionary
+            for data in x:
                 prediction += self.d[l_key].get(data, 0) * x[data]
-            if prediction > best_val:
-                best_val = prediction
-                best_l = l_key
-        return best_l
+            if prediction > bestVal:
+                bestVal = prediction
+                bestLabel = l_key
+        return bestLabel
 
 
 ############################################################
@@ -115,11 +110,9 @@ class DigitClassifier(object):
 
 class BiasClassifier(object):
     def __init__(self, data):
-        # creating feature ids
         self.feature_id = ("x1", "x2")
         train = []
         for data_point in data:
-            # adding bias term
             if data_point[0] > 1:
                 bias = (data_point[0], 1)
             else:
