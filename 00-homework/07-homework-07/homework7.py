@@ -2,7 +2,7 @@
 # CIS 521: Homework 7
 ############################################################
 
-student_name = "Type your full name here."
+student_name = "Jerrison Li"
 
 ############################################################
 # Imports
@@ -20,18 +20,62 @@ import homework7_data as data
 
 class BinaryPerceptron(object):
     def __init__(self, examples, iterations):
-        pass
+        self.w = {}
+        for i in range(iterations):
+            for d, sign in examples:
+                prediction = 0.0
+                for key in d:
+                    prediction += d[key] * self.w.get(key, 0)
+                if (sign and prediction <= 0) or (not sign and prediction > 0):
+                    for key in d:
+                        if sign > 0:
+                            self.w[key] = self.w.get(key, 0) + d[key]
+                        else:
+                            self.w[key] = self.w.get(key, 0) - d[key]
 
     def predict(self, x):
-        pass
+        res = 0
+        for key in x:
+            res += self.w.get(key, 0) * x[key]
+        return res > 0
 
 
 class MulticlassPerceptron(object):
     def __init__(self, examples, iterations):
-        pass
+        self.d = {label: {} for dict, label in examples}
+        # pick a first label
+        first = examples[0][1]
+        for i in range(iterations):
+            for dict, l in examples:
+                # compute max predicted label
+                best_l, best_val = first, None
+                for l_key in self.d:
+                    prediction = 0
+                    d_l = self.d[l_key]
+                    for key in dict:
+                        prediction += d_l.get(key, 0) * dict[key]
+                    if best_val == None or prediction > best_val:
+                        best_val, best_l = prediction, l_key
+                # update weight vector
+                if best_l != l:
+                    for key in dict:
+                        x = dict[key]
+                        # Increase the score for the correct class
+                        self.d[l][key] = self.d[l].get(key, 0) + x
+                        # Decrease the score for the predicted class
+                        self.d[best_l][key] = self.d[best_l].get(key, 0) - x
 
     def predict(self, x):
-        pass
+        best_l = None
+        best_val = 0
+        for l_key in self.d:  # for each label
+            prediction = 0
+            for data in x:  # for each value in dictionary
+                prediction += self.d[l_key].get(data, 0) * x[data]
+            if prediction > best_val:
+                best_val = prediction
+                best_l = l_key
+        return best_l
 
 
 ############################################################
@@ -41,58 +85,123 @@ class MulticlassPerceptron(object):
 
 class IrisClassifier(object):
     def __init__(self, data):
-        pass
+        iterations = 30
+        data_list = []
+        for (x, y) in data:
+            d = {}
+            for i in range(4):
+                d["p%s" % i] = x[i]
+            data_list.append((d, y))
+        self.p = MulticlassPerceptron(data_list, iterations)
 
     def classify(self, instance):
-        pass
+        d = {}
+        for i in range(4):
+            d["p%s" % i] = instance[i]
+        return self.p.predict(d)
 
 
 class DigitClassifier(object):
     def __init__(self, data):
-        pass
+        train = [
+            ({i + 1: tup[i] for i in range(64)}, category) for tup, category in data
+        ]
+        self.p = MulticlassPerceptron(train, 9)
 
     def classify(self, instance):
-        pass
+        d = {i + 1: instance[i] for i in range(64)}
+        return self.p.predict(d)
 
 
 class BiasClassifier(object):
     def __init__(self, data):
-        pass
+        # creating feature ids
+        self.feature_id = ("x1", "x2")
+        train = []
+        for data_point in data:
+            # adding bias term
+            if data_point[0] > 1:
+                bias = (data_point[0], 1)
+            else:
+                bias = (data_point[0], -1)
+            data_point = list(data_point)
+            data_point[0] = dict(zip(self.feature_id, bias))
+            data_point = tuple(data_point)
+            train.append(data_point)
+
+        # init and train classifier on data
+        self.classifier = BinaryPerceptron(train, 5)
 
     def classify(self, instance):
-        pass
+        if instance > 1:
+            bias = (instance, 1)
+        else:
+            bias = (instance, -1)
+        test_data = dict(zip(self.feature_id, bias))
+        return self.classifier.predict(test_data)
 
 
 class MysteryClassifier1(object):
     def __init__(self, data):
-        pass
+        iterations = 1
+        examples = self.format_data(data)
+        self.classifier = BinaryPerceptron(examples, iterations)
 
     def classify(self, instance):
-        pass
+        ins = {"x1": instance[0] ** 2 + instance[1] ** 2, "x2": 1}
+        return self.classifier.predict(ins)
+
+    def format_data(self, data):
+        examples = [
+            ({"x1": exp[0][0] ** 2 + exp[0][1] ** 2, "x2": 1}, exp[1]) for exp in data
+        ]
+        return examples
 
 
 class MysteryClassifier2(object):
     def __init__(self, data):
-        pass
+        train = list()
+        for (x, y, z), bool in data:
+            d = {"x": x, "y": y, "z": z}
+            if self.mystery_verifier(x, y, z):
+                d["in"] = 1
+            else:
+                d["out"] = 1
+            train.append((d, bool))
+        self.p = BinaryPerceptron(train, 4)
 
     def classify(self, instance):
-        pass
+        x, y, z = instance
+        d = {"x": x, "y": y, "z": z}
+        if self.mystery_verifier(x, y, z):
+            d["in"] = 1
+        else:
+            d["out"] = 1
+        return self.p.predict(d)
+
+    def mystery_verifier(self, x, y, z):
+        if 0 <= x and 0 >= y and 0 >= z:
+            return True
+        elif 0 >= x and 0 >= y and 0 <= z:
+            return True
+        elif 0 <= x and 0 <= y and 0 <= z:
+            return True
+        elif 0 >= x and 0 <= y and 0 >= z:
+            return True
+        else:
+            return False
 
 
 ############################################################
 # Section 3: Feedback
 ############################################################
 
-feedback_question_1 = 0
+feedback_question_1 = 15
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+The Mystery Classifiers were the most significant stumbling blocks.
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+The fact that it is touching machine learning.
 """
